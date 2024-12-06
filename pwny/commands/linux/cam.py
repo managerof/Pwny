@@ -20,7 +20,6 @@ CAM_BASE = 5
 CAM_LIST = tlv_custom_tag(API_CALL_STATIC, CAM_BASE, API_CALL)
 
 CAM_PIPE = tlv_custom_pipe(PIPE_STATIC, CAM_BASE, PIPE_TYPE)
-CAM_ID = tlv_custom_type(TLV_TYPE_INT, CAM_BASE, API_TYPE)
 
 
 class ExternalCommand(Command):
@@ -147,7 +146,7 @@ class ExternalCommand(Command):
                 pipe_id = self.session.pipes.create_pipe(
                     pipe_type=CAM_PIPE,
                     args={
-                        CAM_ID: args.stream - 1
+                        TLV_TYPE_INT: args.stream - 1
                     }
                 )
 

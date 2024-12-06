@@ -307,8 +307,6 @@ Running as %blue$user%end on %line$dir%end
             self.print_usage("exec <path>")
             return
 
-        self.check_session()
-
         if len(args) >= 2:
             self.session.spawn(args[1], line[2:])
             return
@@ -379,12 +377,9 @@ Running as %blue$user%end on %line$dir%end
         :raises EOFError: EOF error
         """
 
-        self.check_session()
-
         self.session.send_command(
             tag=BUILTIN_QUIT
         )
-        self.session.terminated = True
         self.session.close()
 
         raise EOFError
@@ -416,6 +411,8 @@ Running as %blue$user%end on %line$dir%end
         :return str: commands
         """
 
+        self.check_session()
+
         for key, item in self.env.items():
             line = line.replace(f'${key}', str(item))
 
@@ -433,16 +430,14 @@ Running as %blue$user%end on %line$dir%end
         """ Check is session alive.
 
         :return None: None
-        :raises RuntimeError: with trailing error message
-        :raises RuntimeWarning: with trailing warning message
+        :raises EOFError: to exit the handler
         """
 
-        if not self.session:
-            raise RuntimeError(f"Session is dead ({self.session.reason})!")
-
-        if self.session.terminated:
+        if not self.session.heartbeat():
+            self.print_error(f"Session is terminated ({self.session.reason}).")
             self.session.close()
-            raise RuntimeWarning(f"Connection terminated ({self.session.reason}).")
+
+            raise EOFError
 
     def load_plugins(self, path: str) -> None:
         """ Load custom Pwny plugins.

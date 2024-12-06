@@ -223,6 +223,10 @@ class PwnySession(Session, FS, OpenSSL):
         :return bool: True if the Pwny session is alive
         """
 
+        if not self.channel.running and self.channel.error:
+            self.reason = TERM_DEAD
+            self.terminated = True
+
         return not self.terminated
 
     def send_command(self, tag: int, args: dict = {}, plugin: Optional[int] = None) -> TLVPacket:
@@ -424,15 +428,30 @@ class PwnySession(Session, FS, OpenSSL):
 
         self.channel.queue_resume()
 
-    def interact(self) -> None:
+    def interact(self, banner: bool = True,
+                 tip: bool = True,
+                 prompt: Optional[str] = None,
+                 motd: Optional[str] = None) -> None:
         """ Interact with the Pwny session.
 
+        :param bool banner: True to display banner else False
+        :param bool tip: True to display tip else False
+        :param Optional[str] prompt: custom prompt message
+        :param Optional[str] motd: custom message of the day
         :return None: None
         :raises RuntimeError: with trailing error message
         """
 
         if not self.console:
             raise RuntimeError("Not yet ready for interaction!")
+
+        self.console.set_banner(banner)
+        self.console.set_tip(tip)
+
+        if prompt:
+            self.console.set_prompt(prompt)
+        if motd:
+            self.console.set_motd(motd)
 
         self.resume()
         self.console.pwny_console()

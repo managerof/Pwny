@@ -40,30 +40,34 @@
         TLV_TAG_CUSTOM(API_CALL_INTERNAL, \
                        PIPE_BASE, \
                        API_CALL)
-#define PIPE_WRITE \
+#define PIPE_READALL \
         TLV_TAG_CUSTOM(API_CALL_INTERNAL, \
                        PIPE_BASE, \
                        API_CALL + 1)
-#define PIPE_SEEK \
+#define PIPE_WRITE \
         TLV_TAG_CUSTOM(API_CALL_INTERNAL, \
                        PIPE_BASE, \
                        API_CALL + 2)
-#define PIPE_TELL \
+#define PIPE_SEEK \
         TLV_TAG_CUSTOM(API_CALL_INTERNAL, \
                        PIPE_BASE, \
                        API_CALL + 3)
-#define PIPE_CREATE \
+#define PIPE_TELL \
         TLV_TAG_CUSTOM(API_CALL_INTERNAL, \
                        PIPE_BASE, \
                        API_CALL + 4)
-#define PIPE_DESTROY \
+#define PIPE_CREATE \
         TLV_TAG_CUSTOM(API_CALL_INTERNAL, \
                        PIPE_BASE, \
                        API_CALL + 5)
-#define PIPE_HEARTBEAT \
+#define PIPE_DESTROY \
         TLV_TAG_CUSTOM(API_CALL_INTERNAL, \
                        PIPE_BASE, \
                        API_CALL + 6)
+#define PIPE_HEARTBEAT \
+        TLV_TAG_CUSTOM(API_CALL_INTERNAL, \
+                       PIPE_BASE, \
+                       API_CALL + 7)
 
 #define TLV_TYPE_PIPE_TYPE      TLV_TYPE_CUSTOM(TLV_TYPE_INT, PIPE_BASE, API_TYPE)
 #define TLV_TYPE_PIPE_ID        TLV_TYPE_CUSTOM(TLV_TYPE_INT, PIPE_BASE, API_TYPE + 1)
@@ -89,6 +93,7 @@ struct pipe_callbacks
 {
     int (*create_cb)(pipe_t *pipe, c2_t *c2);
     int (*read_cb)(pipe_t *pipe, void *buffer, int length);
+    int (*readall_cb)(pipe_t *pipe, void **buffer);
     int (*write_cb)(pipe_t *pipe, void *buffer, int length);
     int (*seek_cb)(pipe_t *pipe, int offset, int whence);
     int (*tell_cb)(pipe_t *pipe);

@@ -45,6 +45,8 @@
 #endif
 
 #ifdef __linux__
+#include <linux/mic.h>
+#include <linux/cam.h>
 #include <linux/migrate.h>
 #endif
 
@@ -69,6 +71,8 @@ void register_api_calls(api_calls_t **api_calls)
 #endif
 
 #ifdef __linux__
+    register_mic_api_calls(api_calls);
+    register_cam_api_calls(api_calls);
     register_migrate_api_calls(api_calls);
 #endif
 }
@@ -79,8 +83,17 @@ void register_api_pipes(pipes_t **pipes)
     register_process_api_pipes(pipes);
     register_net_api_pipes(pipes);
 
+#ifdef __macintosh__
+    register_cam_api_pipes(pipes);
+#endif
+
 #ifdef __iphone__
     register_player_api_pipes(pipes);
+#endif
+
+#ifdef __linux__
+    register_cam_api_pipes(pipes);
+    register_mic_api_pipes(pipes);
 #endif
 }
 

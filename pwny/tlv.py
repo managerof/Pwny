@@ -108,6 +108,7 @@ class TLV(Badges, String):
         self.job = None
 
         self.running = False
+        self.error = None
         self.signal = SignalPipe()
         self.args = args
 
@@ -196,8 +197,11 @@ class TLV(Badges, String):
                             error=error,
                             verbose=verbose
                         )
-                    except Exception:
+
+                    except Exception as e:
                         self.running = False
+                        self.error = str(e)
+
                         continue
 
                     if not packet:
