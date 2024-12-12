@@ -26,9 +26,9 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <queue.h>
+#include <pwny/queue.h>
 #include <errno.h>
-#include <log.h>
+#include <pwny/log.h>
 
 #include <uthash/utlist.h>
 

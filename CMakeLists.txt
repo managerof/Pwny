@@ -90,7 +90,8 @@ if(MAIN)
 
     if(CMAKE_SYSTEM_NAME STREQUAL Windows)
         target_link_libraries(main PRIVATE injector pawn)
-        target_link_libraries(main PRIVATE ws2_32 imagehlp)
+        target_link_libraries(main PRIVATE ws2_32 netapi32 version)
+        target_link_options(main PRIVATE --static)
 
     elseif(CMAKE_SYSTEM_NAME STREQUAL Darwin)
         target_compile_options(main PRIVATE -fobjc-arc)

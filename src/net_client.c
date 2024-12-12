@@ -36,9 +36,9 @@
 #include <ev.h>
 #include <eio.h>
 
-#include <log.h>
-#include <net_client.h>
-#include <io.h>
+#include <pwny/log.h>
+#include <pwny/net_client.h>
+#include <pwny/io.h>
 
 net_t *net_create(void)
 {

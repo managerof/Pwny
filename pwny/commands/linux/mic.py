@@ -19,8 +19,6 @@ from matplotlib.animation import FuncAnimation
 
 CHUNK = 1024
 WIDTH = 2
-RATE = 48000
-CHANNELS = 1
 
 MIC_BASE = 6
 
@@ -84,6 +82,30 @@ class ExternalCommand(Command):
                     {
                         'help': "Local file to save audio to (.wav).",
                         'metavar': 'FILE'
+                    }
+                ),
+                (
+                    ('-r', '--rate'),
+                    {
+                        'help': "Specify rate for audio (default: 48000)",
+                        'type': int,
+                        'default': 48000
+                    }
+                ),
+                (
+                    ('-C', '--channels'),
+                    {
+                        'help': "Specify number of channels (default: 2)",
+                        'type': int,
+                        'default': 1
+                    }
+                ),
+                (
+                    ('-f', '--format'),
+                    {
+                        'help': "Specify format (default: cd)",
+                        'choices': ['cd', 'dat'],
+                        'default': 'cd'
                     }
                 )
             ]
@@ -184,8 +206,8 @@ class ExternalCommand(Command):
             audio = pyaudio.PyAudio()
             stream = audio.open(
                 format=pyaudio.paInt16,
-                channels=CHANNELS,
-                rate=RATE,
+                channels=args.channels,
+                rate=args.rate,
                 frames_per_buffer=CHUNK // WIDTH,
                 output=True
             )

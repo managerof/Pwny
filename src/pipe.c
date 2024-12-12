@@ -22,12 +22,12 @@
  * SOFTWARE.
  */
 
-#include <tlv.h>
-#include <c2.h>
-#include <tlv_types.h>
-#include <log.h>
-#include <api.h>
-#include <pipe.h>
+#include <pwny/tlv.h>
+#include <pwny/c2.h>
+#include <pwny/tlv_types.h>
+#include <pwny/log.h>
+#include <pwny/api.h>
+#include <pwny/pipe.h>
 
 #include <uthash/uthash.h>
 
